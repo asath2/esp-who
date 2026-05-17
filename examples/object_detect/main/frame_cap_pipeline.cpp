@@ -100,7 +100,7 @@ WhoFrameCap *get_lcd_mipi_csi_ppa_frame_cap_pipeline(WhoFrameCapNode **lcd_disp_
 
 WhoFrameCap *get_lcd_uvc_frame_cap_pipeline()
 {
-    auto cam = new WhoUVCCam(UVC_VS_FORMAT_MJPEG, 640, 480, 30, 4);
+    auto cam = new WhoUVCCam(UVC_VS_FORMAT_MJPEG, 320, 320, 30, 4);
     auto frame_cap = new WhoFrameCap();
     // The ringbuf_len of FetchNode equals cam_fb_count - 2, the ringbuf_len of FetchNode should take care of the
     // process time of the following Node. For example, if the DecodeNode takes 2 frame to decode, then the
