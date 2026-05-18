@@ -25,6 +25,12 @@ WhoS3Cam::WhoS3Cam(const pixformat_t pixel_format,
     }
     ESP_ERROR_CHECK(esp_camera_init(&camera_config));
     ESP_ERROR_CHECK(esp_camera_set_psram_mode(true));
+    ESP_LOGI(TAG,
+             "WhoS3Cam args: vertical_flip=%d horizontal_flip=%d -> sensor vflip=%d hmirror=%d",
+             vertical_flip,
+             horizontal_flip,
+             !vertical_flip,
+             !horizontal_flip);
     ESP_ERROR_CHECK(set_flip(!vertical_flip, !horizontal_flip));
 }
 
