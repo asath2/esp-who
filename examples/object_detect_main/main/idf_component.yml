@@ -1,5 +1,0 @@
-dependencies:
-  esp32_s3_eye_noglib:
-    version: '*'
-  pedestrian_detect:
-    version: '*'

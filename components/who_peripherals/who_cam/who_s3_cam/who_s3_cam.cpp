@@ -42,6 +42,14 @@ WhoS3Cam::~WhoS3Cam()
 cam_fb_t *WhoS3Cam::cam_fb_get()
 {
     camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb || !fb->buf || fb->len == 0) {
+        ESP_LOGW(TAG, "Camera returned an empty frame; dropping it.");
+        if (fb) {
+            esp_camera_fb_return(fb);
+        }
+        return nullptr;
+    }
+
     int i = get_cam_fb_index();
     m_cam_fbs[i] = cam_fb_t(*fb);
     return &m_cam_fbs[i];
@@ -49,6 +57,9 @@ cam_fb_t *WhoS3Cam::cam_fb_get()
 
 void WhoS3Cam::cam_fb_return(cam_fb_t *fb)
 {
+    if (!fb || !fb->ret) {
+        return;
+    }
     esp_camera_fb_return((camera_fb_t *)fb->ret);
 }
 

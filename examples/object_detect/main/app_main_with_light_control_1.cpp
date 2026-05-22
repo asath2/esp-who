@@ -8,6 +8,10 @@
  *   - If BOTH frames detect a person  → GPIO_NUM_47 HIGH (stays HIGH).
  *   - If either frame misses a person → GPIO_NUM_47 LOW  (stays LOW).
  *   - No timer, no auto-reset — pin directly mirrors the confirmed result.
+ *
+ * False detection filter:
+ *   - If the model returns a bounding box of exactly [0,0,239,239], it is
+ *     treated as a false detection and ignored (person_now = false).
  */
 
 #include <stdio.h>
@@ -37,7 +41,7 @@ static const char *TAG = "MAIN";
 // ── Feature enable / disable switches ────────────────────────────────────────
 #define ENABLE_RGB_LED              1
 #define ENABLE_SD_SAVE              1
-#define ENABLE_FILL_LIGHT           0
+#define ENABLE_FILL_LIGHT           1
 #define ENABLE_BLINK_TEST           0
 #define ENABLE_PERSON_TRIGGER_GPIO  1
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,12 +59,13 @@ static const char *TAG = "MAIN";
 #define MOUNT_POINT                 CONFIG_BSP_SD_MOUNT_POINT
 #define SAVE_DIR                    MOUNT_POINT "/detections"
 #define RESULT_CSV                  SAVE_DIR "/log.csv"
+const int monitor_time = 3000; // ms to keep GPIO high after detection (extends on each new detection)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Start time ───────────────────────────────────────────────────────────────
 #define START_YEAR   2026
 #define START_MONTH  5
-#define START_DAY    8
+#define START_DAY    17
 #define START_HOUR   10
 #define START_MIN    0
 #define START_SEC    0
@@ -593,7 +598,8 @@ private:
 
             auto fb = m_frame_node->cam_fb_peek();
             if (!fb || !fb->buf) continue;
-
+            uint64_t now_ms_global = esp_timer_get_time() / 1000;
+            person_trigger_gpio_set(now_ms_global < m_gpio_high_until_ms);
             dl::image::img_t img = static_cast<dl::image::img_t>(*fb);
 
             // Always update the fill light on every frame
@@ -611,8 +617,21 @@ private:
             }
 
             // ── 2-frame sampling window ──────────────────────────────────────
-            auto &results  = m_model->run(img);
-            bool person_now = !results.empty();
+            auto &results = m_model->run(img);
+
+            // Filter out false detections where the bounding box is exactly
+            // [0, 0, 239, 239] — treat this as no person detected.
+            bool person_now = false;
+            if (!results.empty()) {
+                auto &r = results.front();
+                bool is_false_box = (r.box[0] == 0   && r.box[1] == 0 &&
+                                     r.box[2] == 239  && r.box[3] == 239);
+                if (is_false_box) {
+                    ESP_LOGD(TAG, "False detection filtered: box=[0,0,239,239]");
+                } else {
+                    person_now = true;
+                }
+            }
 
             char ts[24];
             get_timestamp_str(ts, sizeof(ts));
@@ -633,7 +652,13 @@ private:
                 m_window_active = false;
 
                 // Drive GPIO 47 directly — HIGH if confirmed, LOW otherwise
-                person_trigger_gpio_set(both_detected);
+                uint64_t now_ms = esp_timer_get_time() / 1000;
+
+                if (both_detected) {
+                    m_gpio_high_until_ms = now_ms + monitor_time; // 3 sec extend
+                }
+
+                person_trigger_gpio_set(now_ms < m_gpio_high_until_ms);
 
                 if (both_detected) {
                     rgb_person_detected();
@@ -683,7 +708,7 @@ private:
     who::frame_cap::WhoFrameCapNode *m_frame_node;
     LightController                 *m_light_ctrl;
     PedestrianDetect                *m_model;
-
+    uint64_t m_gpio_high_until_ms = 0;
     // Waiting-phase counter
     int      m_frame_count;
     uint64_t m_last_save_ms;

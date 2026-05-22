@@ -1,5 +1,5 @@
 set(src_files
-    app_main_with_light_control.cpp
+    app_main_with_light_control_1
     light_controller.cpp
     frame_cap_pipeline.cpp
 )
