@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 // /**
 //  * @file app_main_with_light_control.cpp
@@ -745,6 +746,8 @@
 
 
 
+=======
+>>>>>>> d24d51a1576b81c226506d2801fe2b6d5863e881
 /**
  * @file app_main_with_light_control.cpp
  * @brief Person Detection + Brightness-based LED control + WS2812 RGB LED + Person trigger GPIO
@@ -1462,7 +1465,10 @@ private:
 // ── App main ─────────────────────────────────────────────────────────────────
 extern "C" void app_main(void)
 {
+<<<<<<< HEAD
     vTaskDelay(pdMS_TO_TICKS(300));
+=======
+>>>>>>> d24d51a1576b81c226506d2801fe2b6d5863e881
     time_feature_init();
 
     ESP_LOGI(TAG, "=== Person Detection + Light Control ===");
@@ -1507,8 +1513,12 @@ extern "C" void app_main(void)
 
     ESP_LOGI(TAG, "Running from %s | Every %d frames | 2-frame confirm | Score >= %.2f",
              ts, FRAME_SAMPLE_RATE, SCORE_THRESHOLD);
+<<<<<<< HEAD
 }
 
 
 
 
+=======
+}
+>>>>>>> d24d51a1576b81c226506d2801fe2b6d5863e881

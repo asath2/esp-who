@@ -1,5 +1,9 @@
 set(src_files
+<<<<<<< HEAD
     app_main_with_light_control_1
+=======
+    app_main_with_light_control.cpp
+>>>>>>> d24d51a1576b81c226506d2801fe2b6d5863e881
     light_controller.cpp
     frame_cap_pipeline.cpp
 )
